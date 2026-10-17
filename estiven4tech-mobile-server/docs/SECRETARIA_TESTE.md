@@ -93,10 +93,13 @@ Após reinício do Android: abrir UserLAnd → `scripts/start.sh` sobe tudo, inc
 3. **Phantom process killer (Android 12).** São ~8 processos filhos; o Android pode encerrá-los.
 4. **Dependências nativas.** `npm ci` baixa o esbuild para arm64; confirmar no aparelho.
 
-## Problema encontrado no repositório secretaria-barber (não corrigido aqui)
+## Testes de data no secretaria-barber (corrigido em branch)
 
-4 testes de `test/agenda.int.test.ts` falham **em qualquer ambiente desde 17/10/2026 13:00 UTC**: eles agendam
-um horário fixo (sábado 17/10 10:00 de Brasília) e depois cancelam, mas `agenda.cancel` exige
-`starts_at > now()` com o relógio real do banco. Hoje esse horário já passou. Correção sugerida no repositório
-do app: datas relativas ao relógio do banco nos testes, ou injetar o "agora" também no cancelamento.
-`scripts/secretaria.sh testar` mostra essas 4 falhas; as outras 179 devem passar.
+Até 17/10/2026, 4 testes de `test/agenda.int.test.ts` falhavam em qualquer ambiente a partir de 17/10 13:00 UTC.
+Causa: `upcoming()` e `cancel()` comparavam com o `now()` do Postgres, enquanto o resto do serviço usa o relógio
+injetado em `createAgenda` (fixado em 13/10 nos testes).
+
+Correção na branch `claude/agenda-relogio-injetado` do `secretaria-barber` (commit `2b8fae2`): as duas consultas
+passam a usar o relógio injetado. Em produção o padrão é `new Date()`, sem mudança de comportamento.
+Resultado: 183/183; testes de agenda também passam com o relógio em 2027-03-01 e em 2026-10-10.
+Enquanto a branch não entrar na `main`, `scripts/secretaria.sh testar` com a `main` ainda mostra as 4 falhas.
