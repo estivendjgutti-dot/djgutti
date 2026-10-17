@@ -1,0 +1,40 @@
+{
+  "_comentario": "Copie para config/jobs.json para personalizar. Só tarefas LOCAIS vêm ativas; integrações externas ficam desativadas até haver URL/credenciais e autorização. catchup: latest (só a mais recente ao voltar), skip (nenhuma atrasada; p/ mensagens), window (atrasadas dentro de catchup_window_seconds).",
+  "jobs": [
+    {
+      "job_id": "demo_timestamp",
+      "kind": "demo_timestamp",
+      "enabled": true,
+      "interval_seconds": 300,
+      "catchup": "latest",
+      "max_attempts": 5,
+      "timeout_seconds": 20,
+      "external_effect": false
+    },
+    {
+      "job_id": "backup_diario",
+      "kind": "backup_local",
+      "enabled": true,
+      "interval_seconds": 86400,
+      "catchup": "latest",
+      "max_attempts": 3,
+      "timeout_seconds": 60,
+      "external_effect": false
+    },
+    {
+      "job_id": "http_check",
+      "kind": "http_check",
+      "enabled": false,
+      "interval_seconds": 300,
+      "catchup": "latest",
+      "max_attempts": 5,
+      "timeout_seconds": 20,
+      "external_effect": false,
+      "params": {
+        "url": "",
+        "http_timeout_seconds": 10,
+        "expect_status": 200
+      }
+    }
+  ]
+}

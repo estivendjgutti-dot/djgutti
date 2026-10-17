@@ -1,0 +1,16 @@
+# segredos
+.env
+*.env.local
+*.key
+*.pem
+secrets/
+# ambiente e dados de runtime
+.venv/
+data/
+logs/
+run/
+backups/
+__pycache__/
+*.pyc
+config/jobs.json
+config/*.pre-restore-*

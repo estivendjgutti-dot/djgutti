@@ -1,0 +1,145 @@
+# Diagnóstico estiven4tech-mobile-server
+# coletado em 2026-10-17T18:58:23+00:00 | projeto: /home/user/djgutti/estiven4tech-mobile-server
+## Fase A (AGENTS.md §5)
+
+$ uname -m
+x86_64
+[saída 0]
+
+$ uname -sr
+Linux 6.18.44-fc-v139
+[saída 0]
+
+$ cat /etc/os-release
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.5 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+[saída 0]
+
+$ id
+uid=0(root) gid=0(root) groups=0(root)
+[saída 0]
+
+$ getconf LONG_BIT
+64
+[saída 0]
+
+$ getconf GNU_LIBC_VERSION
+glibc 2.39
+[saída 0]
+
+$ df -h "$HOME"
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda        252G  9.1G   30G  24% /
+[saída 0]
+
+$ df -T "$HOME" 2>/dev/null || mount 2>/dev/null | grep -E " / | $HOME " | head -5
+Filesystem     Type 1K-blocks    Used Available Use% Mounted on
+/dev/vda       ext4 264212084 9477168  31366444  24% /
+[saída 0]
+
+$ free -h
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       534Mi        14Gi        14Mi       489Mi        15Gi
+Swap:             0B          0B          0B
+[saída 0]
+
+$ nproc
+4
+[saída 0]
+
+$ ps -p 1 -o pid,comm,args
+  PID COMMAND         COMMAND
+    1 process_api     /process_api --firecracker-init --addr 0.0.0.0:2024 --max-ws-buffer-size 32768 --block-local-connections --listen-vsock-port 2024 --log-vsock-port 5002
+[saída 0]
+
+$ date -Is; echo "TZ=${TZ:-<não definido>}"; ls -l /etc/localtime 2>/dev/null
+2026-10-17T18:58:23+00:00
+TZ=<não definido>
+lrwxrwxrwx 1 root root 27 Oct  3 05:36 /etc/localtime -> /usr/share/zoneinfo/Etc/UTC
+[saída 0]
+
+$ command -v python3 && python3 --version
+/usr/bin/python3
+Python 3.13.16
+[saída 0]
+
+$ command -v tmux && tmux -V
+/usr/bin/tmux
+tmux 3.4
+[saída 0]
+
+$ command -v sqlite3 && sqlite3 --version
+/usr/bin/sqlite3
+3.45.1 2024-01-30 16:01:20 e876e51a0ed5c5b3126f52e532044363a014bc594cfefa87ffb5b82257ccalt1 (64-bit)
+[saída 0]
+
+$ command -v sudo; command -v systemctl; command -v docker; command -v pkg; true
+/usr/bin/sudo
+/usr/bin/systemctl
+/usr/bin/docker
+[saída 0]
+
+## Indícios de PRoot / limitações
+
+$ grep -E "^(TracerPid|Seccomp|NoNewPrivs):" /proc/self/status
+TracerPid:	0
+NoNewPrivs:	0
+Seccomp:	0
+[saída 0]
+
+$ cat /proc/1/comm 2>/dev/null; readlink /proc/1/exe 2>/dev/null; true
+process_api
+[saída 0]
+
+$ echo "PROOT_*: $(env | grep -c "^PROOT_" ) variável(is) (valores omitidos)"
+PROOT_*: 0 variável(is) (valores omitidos)
+[saída 0]
+
+$ cat /proc/meminfo 2>/dev/null | head -3   # pode refletir o Android inteiro
+MemTotal:       16479424 kB
+MemFree:        15658696 kB
+MemAvailable:   15931604 kB
+[saída 0]
+
+$ cat /sys/class/power_supply/battery/capacity /sys/class/power_supply/battery/status 2>/dev/null || echo "bateria: não acessível pelo Linux"
+bateria: não acessível pelo Linux
+[saída 0]
+
+## Testes funcionais no disco do projeto
+
+$ python3 - <<'PY'
+import fcntl, os, socket, sqlite3, sys
+d = '/home/user/djgutti/estiven4tech-mobile-server/.diag.TiN6'
+fh = open(os.path.join(d, 'l'), 'w')
+fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB); print('flock: OK')
+c = sqlite3.connect(os.path.join(d, 't.db'))
+print('sqlite', sqlite3.sqlite_version, 'journal_mode=wal ->', c.execute('PRAGMA journal_mode=wal').fetchone()[0])
+c.execute('create table t(x)'); c.execute('insert into t values (1)'); c.commit()
+c2 = sqlite3.connect(os.path.join(d, 't.db')); print('leitura concorrente:', c2.execute('select count(*) from t').fetchone()[0])
+s = socket.socket(socket.AF_UNIX); s.bind(os.path.join(d, 's.sock')); s.listen(1); print('socket unix: OK')
+import signal; signal.setitimer(signal.ITIMER_REAL, 0); print('setitimer: OK')
+PY
+flock: OK
+sqlite 3.45.1 journal_mode=wal -> wal
+leitura concorrente: 1
+socket unix: OK
+setitimer: OK
+[saída 0]
+
+$ command -v tmux >/dev/null && tmux -L e4tdiag new-session -d -s diag 'sleep 5' && tmux -L e4tdiag has-session -t diag && echo 'tmux: OK' && tmux -L e4tdiag kill-server
+tmux: OK
+[saída 0]
+
+## Itens que só o aparelho mostra (preencher em docs/DIAGNOSTICO.md)
+Android/One UI, RAM física, armazenamento livre, versão do UserLAnd, distro escolhida no app.
