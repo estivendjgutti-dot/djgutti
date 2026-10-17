@@ -50,6 +50,8 @@ Itens de AGENTS.md §4. Marcar o nome real da opção no seu One UI.
 | Economia de energia desligada; dados em segundo plano | PENDENTE | |
 | "Manter aberto" em Recentes (se existir) | PENDENTE | |
 | Proteção de bateria / ventilação | PENDENTE | |
+| Android 12 "phantom process killer": observar se mata supervisor/worker/tmux nos testes longos (desativar exige ADB; avaliar antes) | PENDENTE | |
+| Backend disponível no app (Standard proot / Virtual Machine pro) | PENDENTE | ver DIAGNOSTICO.md §3 |
 
 ## 3. Testes longos com o aparelho — NÃO EXECUTADOS
 

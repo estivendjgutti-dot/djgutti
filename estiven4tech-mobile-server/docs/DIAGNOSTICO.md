@@ -63,7 +63,24 @@ Copiar os resultados para a tabela (o arquivo completo fica em `docs/diagnostico
 | Distribuição escolhida no app | PENDENTE |
 | Origem da instalação do UserLAnd (Play Store/F-Droid) | PENDENTE |
 
-## 3. Claude Code no UserLAnd — PENDENTE
+## 3. UserLAnd Pro (backend Virtual Machine) — requisitos x S10 Plus
+
+Contratado pelo proprietário em 17/10/2026. Requisitos publicados no blog oficial
+(<https://blog.userland.tech/2026/09/actual-virtual-machines-come-to-android.html>):
+
+| Requisito do modo VM | S10 Plus |
+|---|---|
+| Android 14 ou mais novo | Última atualização oficial do S10 Plus: Android 12 (One UI 4.1). **Confirmar** em Configurações > Sobre o telefone |
+| ARM64 | Sim |
+| Virtualização (AVF/pKVM) habilitada pelo fabricante | Improvável num aparelho com Android 12; o app checa a flag do aparelho |
+| Configuração única via Depuração sem fio (ADB) + app "UserLAnd VM" | — |
+
+Conclusão provisória: o backend VM **provavelmente não fica disponível no S10 Plus**. Root/ROM customizada
+estão fora do escopo (AGENTS.md §1). O projeto continua no backend "Standard (proot)", que segue grátis.
+Se um dia rodar em aparelho com VM, o mesmo código funciona; `scripts/diagnostico.sh` mostra o backend
+detectado na seção "Backend do UserLAnd". Registrar aqui o que a tela do app mostrar.
+
+## 4. Claude Code no UserLAnd — PENDENTE
 
 Seguir AGENTS.md §11. Registrar aqui `claude --version`, `claude doctor` e qualquer erro (sem segredos).
 Se não funcionar sob PRoot, o servidor Python funciona sem ele: manutenção pode ser feita de outra máquina.

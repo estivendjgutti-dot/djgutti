@@ -33,6 +33,11 @@ run() {
   run 'command -v sqlite3 && sqlite3 --version'
   run 'command -v sudo; command -v systemctl; command -v docker; command -v pkg; true'
 
+  echo; echo "## Backend do UserLAnd (PRoot grátis x Virtual Machine pro)"
+  run 'if grep -qE "^TracerPid:[[:space:]]*[1-9]" /proc/self/status || env | grep -q "^PROOT_"; then echo "BACKEND: PRoot (Standard)"; elif grep -qi hypervisor /proc/cpuinfo 2>/dev/null || [ -d /sys/hypervisor ] || [ "$(cat /proc/1/comm 2>/dev/null)" = systemd ]; then echo "BACKEND: provável VM/kernel próprio"; else echo "BACKEND: indeterminado"; fi'
+  run 'command -v systemd-detect-virt >/dev/null && systemd-detect-virt; true'
+  run 'uname -r; ls /sys/fs/cgroup 2>/dev/null | head -5; true'
+
   echo; echo "## Indícios de PRoot / limitações"
   run 'grep -E "^(TracerPid|Seccomp|NoNewPrivs):" /proc/self/status'
   run 'cat /proc/1/comm 2>/dev/null; readlink /proc/1/exe 2>/dev/null; true'
