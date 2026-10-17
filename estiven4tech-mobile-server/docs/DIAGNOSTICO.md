@@ -75,7 +75,12 @@ Contratado pelo proprietário em 17/10/2026. Requisitos publicados no blog ofici
 | Virtualização (AVF/pKVM) habilitada pelo fabricante | Improvável num aparelho com Android 12; o app checa a flag do aparelho |
 | Configuração única via Depuração sem fio (ADB) + app "UserLAnd VM" | — |
 
-Conclusão provisória: o backend VM **provavelmente não fica disponível no S10 Plus**. Root/ROM customizada
+Decisão de 17/10/2026: o proprietário informou que o Galaxy S20 FE, o outro aparelho disponível, está no
+Android 13, que também fica abaixo do mínimo. Sem vantagem no modo VM, o servidor **continua no S10 Plus,
+backend Standard (proot)**. Root, ROM customizada e kernel customizado foram avaliados e descartados:
+quebrariam o Knox de forma permanente, apagariam os dados e muito provavelmente não liberariam o pKVM.
+
+Conclusão: o backend VM **provavelmente não fica disponível no S10 Plus**. Root/ROM customizada
 estão fora do escopo (AGENTS.md §1). O projeto continua no backend "Standard (proot)", que segue grátis.
 Se um dia rodar em aparelho com VM, o mesmo código funciona; `scripts/diagnostico.sh` mostra o backend
 detectado na seção "Backend do UserLAnd". Registrar aqui o que a tela do app mostrar.
