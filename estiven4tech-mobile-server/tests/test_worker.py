@@ -299,6 +299,47 @@ class ProcessTests(Base):
         self.assertEqual(n[0], n[1])
 
 
+class ScriptTaskTests(Base):
+    def setUp(self):
+        super().setUp()
+        self.orig = db.PROJECT_DIR
+        db.PROJECT_DIR = self.tmp
+        os.makedirs(os.path.join(self.tmp, "scripts"))
+        self.pidfile = os.path.join(self.tmp, "filho.pid")
+
+    def tearDown(self):
+        db.PROJECT_DIR = self.orig
+        super().tearDown()
+
+    def script(self, body):
+        path = os.path.join(self.tmp, "scripts", "s.sh")
+        with open(path, "w") as fh:
+            fh.write("#!/bin/sh\n" + body)
+        os.chmod(path, 0o755)
+
+    def test_success_and_failure(self):
+        self.script("echo ok\n")
+        self.assertIn("elapsed_ms", tasks._run_project_script(["s.sh"], 10, "x"))
+        self.script("echo 'detalhe token=abc'\nexit 3\n")
+        with self.assertRaises(tasks.TransientError) as cm:
+            tasks._run_project_script(["s.sh"], 10, "x")
+        self.assertIn("código 3", str(cm.exception))
+
+    def test_timeout_kills_process_group(self):
+        self.script("sleep 30 &\necho $! > %s\nwait\n" % self.pidfile)
+        t0 = time.monotonic()
+        with self.assertRaises(tasks.TransientError):
+            tasks._run_project_script(["s.sh"], 1, "x")
+        self.assertLess(time.monotonic() - t0, 5)
+        child = int(open(self.pidfile).read())
+        time.sleep(0.2)
+        try:  # morto: some, ou fica zumbi se o PID 1 do ambiente não recolher órfãos
+            with open("/proc/%d/stat" % child) as fh:
+                self.assertEqual(fh.read().split()[2], "Z")
+        except FileNotFoundError:
+            pass
+
+
 class BackupTests(Base):
     def test_backup_verify_restore_to_temp(self):
         self.load(job_def("demo", "demo_timestamp"))

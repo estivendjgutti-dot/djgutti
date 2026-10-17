@@ -59,6 +59,25 @@ c2 = sqlite3.connect(os.path.join(d, 't.db')); print('leitura concorrente:', c2.
 s = socket.socket(socket.AF_UNIX); s.bind(os.path.join(d, 's.sock')); s.listen(1); print('socket unix: OK')
 import signal; signal.setitimer(signal.ITIMER_REAL, 0); print('setitimer: OK')
 PY"
+  echo; echo "## Requisitos da secretária de teste (PostgreSQL + Node 22)"
+  run "python3 - <<'PY'
+import ctypes, ctypes.util, os
+libc = ctypes.CDLL(ctypes.util.find_library('c'), use_errno=True)
+IPC_PRIVATE, IPC_CREAT, IPC_RMID = 0, 0o1000, 0
+shmid = libc.shmget(IPC_PRIVATE, 4096, IPC_CREAT | 0o600)
+if shmid < 0:
+    print('SysV shm: FALHOU (errno %d %s) -> PostgreSQL provavelmente NÃO inicia' % (ctypes.get_errno(), os.strerror(ctypes.get_errno())))
+else:
+    libc.shmctl(shmid, IPC_RMID, None); print('SysV shm: OK (PostgreSQL deve iniciar)')
+semid = libc.semget(IPC_PRIVATE, 1, IPC_CREAT | 0o600)
+if semid < 0:
+    print('SysV sem: FALHOU (errno %d %s)' % (ctypes.get_errno(), os.strerror(ctypes.get_errno())))
+else:
+    libc.semctl(semid, 0, IPC_RMID); print('SysV sem: OK')
+print('/dev/shm:', 'existe' if os.path.isdir('/dev/shm') else 'ausente (usar dynamic_shared_memory_type=mmap, já configurado)')
+PY"
+  run 'ls /usr/lib/postgresql/*/bin/postgres 2>/dev/null || echo "postgresql: não instalado"; node -v 2>/dev/null || echo "node: não está no PATH (scripts/secretaria.sh instalar baixa o 22)"'
+
   run "command -v tmux >/dev/null && tmux -L e4tdiag new-session -d -s diag 'sleep 5' && tmux -L e4tdiag has-session -t diag && echo 'tmux: OK' && tmux -L e4tdiag kill-server"
   rm -rf "$T"
   echo; echo "## Itens que só o aparelho mostra (preencher em docs/DIAGNOSTICO.md)"

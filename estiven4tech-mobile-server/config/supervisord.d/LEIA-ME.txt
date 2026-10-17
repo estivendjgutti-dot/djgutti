@@ -1,0 +1,1 @@
+# Arquivos *.conf gerados aqui são locais (gitignored).

@@ -37,6 +37,24 @@ cd ~/estiven4tech-mobile-server && scripts/validate.sh 2>&1 | tee docs/validacao
 
 Se algo falhar no PRoot, registrar o erro sanitizado e seguir o plano B de docs/OPERACAO.md §6.
 
+## 1b. Secretária virtual de teste (17/10/2026, nuvem, usuário não-root)
+
+Instalação limpa num usuário comum (o PostgreSQL recusa root), com os scripts reais e PostgreSQL 16.
+
+| Teste | Nuvem | Evidência | Galaxy |
+|---|---|---|---|
+| `secretaria.sh instalar`: Node 22.22.0 (SHA-256 conferido), npm ci, cluster, 11 migrações | OK-NUVEM | 13,6 s; migrações 001–011 aplicadas pelo socket Unix | PENDENTE |
+| App sem Docker: typecheck + suíte do app | OK-NUVEM com ressalva | 179/183; as 4 falhas são de data no próprio repositório (ver SECRETARIA_TESTE.md) | PENDENTE |
+| Porta 3100 só em 127.0.0.1 apesar de o app pedir 0.0.0.0 | OK-NUVEM | `/proc/net/tcp`: `0100007F:0C1C`; Postgres sem TCP | PENDENTE |
+| Simulação ponta a ponta (handshake, assinatura falsa 401, dedupe, handoff, /admin/status) | OK-NUVEM | `simulação OK` em ~11–14 s | PENDENTE |
+| `kill -9` no app e no Postgres → supervisor reinicia; Postgres recupera sozinho | OK-NUVEM | pids trocados; "automatic recovery in progress"; simulação OK depois | PENDENTE |
+| `stop.sh` desliga Postgres limpo; `start.sh` sobe tudo de volta | OK-NUVEM | "database system is shut down"; status OK depois | PENDENTE |
+| Jobs `sec_healthz`, `sec_simulacao`, `sec_backup` no agendador | OK-NUVEM | todos `succeeded` | PENDENTE |
+| `pg_dump` + restauração em banco separado | OK-NUVEM | dump de 72 KB restaurado; banco temporário removido | PENDENTE |
+| Convite de operador sem e-mail; painel em 127.0.0.1:3100 | OK-NUVEM | link impresso; `GET /` 200 | PENDENTE |
+| RSS do conjunto (base + Postgres + app + worker) | OK-NUVEM: ~400 MB (soma de RSS) | caiu de ~490 MB ao trocar o binário tsx por `node --import tsx` | PENDENTE |
+| SysV shm/sem disponível (requisito do Postgres) | OK-NUVEM | `scripts/diagnostico.sh` | **PENDENTE — decide a viabilidade no aparelho** |
+
 ## 2. Verificações manuais do Android (só o proprietário pode fazer)
 
 Itens de AGENTS.md §4. Marcar o nome real da opção no seu One UI.

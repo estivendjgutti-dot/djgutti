@@ -59,6 +59,17 @@ Para personalizar: `cp config/jobs.example.json config/jobs.json`, editar e `scr
 Configurações gerais em `.env` (modelo: `.env.example`). Variáveis exportadas no shell **não** chegam ao worker
 através do tmux; use sempre o `.env`.
 
+## Secretária virtual de teste (opcional)
+
+Cópia do app `secretaria-barber` rodando sem Docker (Node 22 + PostgreSQL local), com envio real desligado.
+Detalhes, riscos e teste contínuo: [docs/SECRETARIA_TESTE.md](docs/SECRETARIA_TESTE.md).
+
+```bash
+scripts/secretaria.sh instalar && scripts/secretaria.sh ativar
+scripts/secretaria.sh status        # processos, banco, /healthz, porta só em 127.0.0.1, travas de envio
+scripts/secretaria.sh simular       # conversa simulada ponta a ponta
+```
+
 ## Estrutura
 
 ```

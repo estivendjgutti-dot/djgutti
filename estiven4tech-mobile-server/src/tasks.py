@@ -11,7 +11,9 @@ como concluído, então uma queda no meio não deixa efeito local pela metade.
 import email.utils
 import os
 import re
+import signal
 import socket
+import subprocess
 import time
 import urllib.error
 import urllib.request
@@ -133,6 +135,37 @@ def backup_local(ctx):
     return {"backup": os.path.basename(path), "removed": len(removed)}
 
 
+def _run_project_script(args, limit, label):
+    """Executa um script do projeto com limite de tempo; mata o grupo inteiro em timeout/SIGALRM."""
+    started = time.monotonic()
+    proc = subprocess.Popen([os.path.join(db.PROJECT_DIR, "scripts", args[0])] + list(args[1:]),
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, start_new_session=True)
+    try:
+        out, _ = proc.communicate(timeout=limit)
+    except BaseException:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except OSError:
+            pass
+        proc.wait()
+        raise TransientError("%s excedeu %ds" % (label, limit))
+    if proc.returncode != 0:
+        last = (out or b"").decode("utf-8", "replace").strip().splitlines()[-1:] or [""]
+        raise TransientError("%s falhou (código %d): %s" % (label, proc.returncode, last[0]))
+    return {"elapsed_ms": int((time.monotonic() - started) * 1000)}
+
+
+def secretaria_simulacao(ctx):
+    """Simulação ponta a ponta da secretária de teste (webhook local assinado, envio desligado)."""
+    return _run_project_script(["secretaria.sh", "simular", "--quieto"],
+                               float(ctx.params.get("timeout_seconds", 150)), "simulação")
+
+
+def secretaria_backup(ctx):
+    """pg_dump do banco da secretária de teste, verificado e com retenção."""
+    return _run_project_script(["secretaria.sh", "backup"], float(ctx.params.get("timeout_seconds", 100)), "backup")
+
+
 def test_sleep(ctx):
     """Somente para testes: simula uma tarefa demorada (ex.: queda no meio)."""
     time.sleep(float(ctx.params.get("seconds", 5)))
@@ -150,5 +183,7 @@ REGISTRY = {
     "demo_timestamp": Task(demo_timestamp, transactional=True),
     "http_check": Task(http_check, network=True),
     "backup_local": Task(backup_local),
+    "secretaria_simulacao": Task(secretaria_simulacao),
+    "secretaria_backup": Task(secretaria_backup),
     "test_sleep": Task(test_sleep),
 }
